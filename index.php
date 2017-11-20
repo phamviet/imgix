@@ -28,7 +28,7 @@ $sources = [
 
 $app = new Slim\App( [
 	'settings'   => [
-		'displayErrorDetails' => true,
+		'displayErrorDetails' => false,
 		'sources'             => $sources,
 		'cacheDir'            => __DIR__ . '/cache',
 		'trustedProxies'      => [],
@@ -44,11 +44,11 @@ $app = new Slim\App( [
 		/** @var Request $request */
 		$request    = $container->get( 'request' );
 		$ipDetector = new RKA\Middleware\IpAddress( true, $container->settings['trustedProxies'] );
-		$ipAddress  = $ipDetector( $request,
-			$container->get( 'response' ),
+		$ipAddress  = $ipDetector( $request, $container->get( 'response' ),
 			function ( $request, $response ) {
 				return $request->getAttribute( 'ip_address' );
-			} );
+			}
+		);
 
 		$filesystemAdapter = new Local( $container->settings['cacheDir'] );
 		$filesystem        = new Filesystem( $filesystemAdapter );
@@ -113,7 +113,7 @@ $app->add( function ( Request $request, Response $response, $next ) {
 	return $response;
 } );
 
-// Resize handler
+// Image filter handler
 $app->add( function ( Request $request, Response $response, $next ) {
 	/** @var Response $response */
 	$response = $next( $request, $response );
@@ -121,12 +121,12 @@ $app->add( function ( Request $request, Response $response, $next ) {
 		return $response;
 	}
 
-	$width    = intval( $request->getQueryParam( 'w', 0 ) );
-	$height   = intval( $request->getQueryParam( 'h', 0 ) );
-	$fit      = $request->getQueryParam( 'fit' );
-	$crop     = trim( $request->getQueryParam( 'crop' ) );
-	$quality  = intval( $request->getQueryParam( 'q', 75 ) );
-	$imagine  = new Imagine\Gd\Imagine();
+	$width   = intval( $request->getQueryParam( 'w', 0 ) );
+	$height  = intval( $request->getQueryParam( 'h', 0 ) );
+	$fit     = $request->getQueryParam( 'fit' );
+	$crop    = trim( $request->getQueryParam( 'crop' ) );
+	$quality = intval( $request->getQueryParam( 'q', 75 ) );
+	$imagine = new Imagine\Gd\Imagine();
 
 	if ( $width || $height ) {
 		$image       = $imagine->read( $response->getBody()->detach() );
